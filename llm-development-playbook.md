@@ -72,23 +72,27 @@ Each role has specific inputs and outputs. For human monitoring tasks (when to i
 **What they do:** Translate strategy into structured PRD, define scope, write acceptance criteria
 **Input:** Approved strategy, feature priorities
 **Output:** PRD with user stories, success metrics, scope boundaries
+**Constraint:** Must produce a "Cut List" — features explicitly deferred to future versions
 
 ### 🏗️ Chief Architect
 **What they do:** Break PRD into technical phases, choose patterns, define system boundaries
 **Input:** Approved PRD
 **Output:** Master implementation plan, tech stack decisions, phase breakdown
 **Ongoing:** After each version ships, reviews codebase and updates Master Plan if reality drifted
+**Constraint:** Default to boring technology. Justify any complexity.
 
 ### 👷 Implementation Architect
 **What they do:** Create detailed specs for a single phase/version, iterate with fellow architects until convergence
 **Input:** Master plan section + previous version spec + current codebase state + session history
 **Output:** Detailed implementation plan that builds on what ACTUALLY exists
 **Iteration:** Reads fellow architect reviews, updates spec, flags tradeoffs for user decision
+**Constraint:** Design for current requirements only. No speculative abstractions.
 
 ### 🔨 Developer (Agentic)
 **What they do:** Write code, create PRs per the implementation spec
 **Input:** Finalized implementation spec
 **Output:** Working code, PR ready for review
+**Constraint:** Write readable, concrete code. Avoid cleverness.
 
 ### 🔍 Code Reviewer
 **What they do:** Review PRs for bugs, security, adherence to plan
@@ -99,11 +103,13 @@ Each role has specific inputs and outputs. For human monitoring tasks (when to i
 **What they do:** Actively try to find problems. Prompted to reject by default.
 **Input:** PR diff + implementation plan + other reviewers' approvals
 **Output:** List of concerns, edge cases, security issues, OR specific attestation of what was tested
+**Expanded Mandate:** Hunt for over-engineering, not just bugs.
 
 **Output Requirements:**
 1. Attack Vectors Tried: Specific list (not just "I tried to break it")
 2. Edge Cases Checked: Specific scenarios
-3. If No Issues Found: Explain what made the code resilient
+3. Complexity Audit: Unnecessary abstractions identified
+4. If No Issues Found: Explain what made the code resilient AND simple
 
 ### 📝 Synthesizer
 **What they do:** Compress multiple review outputs into decision-ready summary
@@ -290,6 +296,29 @@ Create a PRD that includes:
 5. **Success Metrics**: How we'll know this worked
 6. **Dependencies**: What must exist before this can be built
 
+## REQUIRED: The Cut List
+
+You MUST include a "Cut List" section that explicitly defers features to future versions:
+
+### Cut List (Deferred to V2+)
+For each cut feature, document:
+- Feature name
+- Why it was considered
+- Why it's not essential for V1
+- When it might be reconsidered
+
+**Cutting Rules:**
+- If a feature is described as "nice to have" → Cut it
+- If a feature adds "future flexibility" → Cut it
+- If you're unsure whether it's essential → Cut it
+
+**Protection Rule:**
+- Do NOT cut features essential to the Problem Statement
+- If the scope is already minimal and no cuts are possible, explicitly state: "Scope is Minimal; no cuts possible."
+- An empty Cut List is acceptable if justified
+
+The goal is a CORE product, not a COMPLETE product. When in doubt, cut — but never cut the core.
+
 Be specific. Vague acceptance criteria lead to vague implementations.
 ```
 
@@ -311,7 +340,33 @@ For each phase/version, define:
 - What's the deliverable
 - What's the acceptance gate
 
-Be opinionated. Make decisions, don't list options.
+## CONSTRAINT: The Simplicity Budget
+
+You must default to BORING technology:
+- SQLite over PostgreSQL (unless PRD specifies >1M rows or concurrent writes)
+- Monolith over Microservices (unless PRD specifies independent scaling)
+- Synchronous over Async (unless PRD specifies specific latency requirements)
+- Standard library over external dependencies (unless stdlib requires >50 lines for equivalent)
+- Files over databases for config/state (unless PRD specifies multi-user access)
+- **In-Process over Networked** (unless PRD specifies distributed systems)
+  - No Redis for caching — use in-memory dict or `functools.lru_cache`
+  - No Celery for background jobs — use `threading`, `multiprocessing`, or `cron`
+  - No message queues — use function calls
+  - Networked dependencies are BANNED for V1 unless PRD explicitly requires multi-machine deployment
+
+**Complexity Justification Rule:**
+For every non-standard technology choice, you MUST include a "Complexity Tradeoff" section:
+```
+## Complexity Tradeoff: [Technology]
+- Simple alternative considered: [X]
+- Why simple alternative fails: [specific requirement from PRD]
+- Added maintenance burden: [honest assessment]
+- Removal plan: [how we'd simplify if requirements change]
+```
+
+If you cannot write a compelling Complexity Tradeoff, use the boring option.
+
+Be opinionated. Make decisions, don't list options. But make SIMPLE decisions.
 ```
 
 ### Implementation Architect Prompt
@@ -361,10 +416,38 @@ Step-by-step for the coding agent:
 3. Write tests for...
 4. Before creating PR, verify...
 
+## CONSTRAINT: Engineering Principles (YAGNI / DRY / KISS)
+
+You are designing for THIS version, not future versions. Follow these rules:
+
+**YAGNI (You Aren't Gonna Need It):**
+- Do NOT design generic interfaces until there are 3+ concrete implementations
+- Do NOT add configuration options for things that have one value
+- Do NOT build plugin systems, extension points, or "flexibility" unless the PRD explicitly requires it
+- If you catch yourself writing "this will allow us to easily..." — STOP. Delete it.
+
+**DRY (Don't Repeat Yourself) — Applied Correctly:**
+- Before creating a new utility/helper, LIST which existing utilities you evaluated
+- Do NOT extract common code until it's duplicated 3+ times with identical logic
+- Prefer small amounts of duplication over wrong abstractions
+
+**KISS (Keep It Simple):**
+- If a file exceeds 200 lines of logic, justify why it can't be split
+- If you're creating more than 5 new files, justify each one
+- Prefer flat structures over deep nesting
+- Prefer functions over classes unless state management requires it
+
+**The Deletion Test:**
+For every component you design, ask: "What breaks if I delete this?"
+- If nothing breaks → Don't build it
+- If only future features break → Don't build it
+- If only "cleanliness" breaks → Don't build it
+
 ## Critical Rules
 - Be SPECIFIC. If a developer would need to make a judgment call, you haven't specified enough.
 - If reality differs from Master Plan, flag the deviation and recommend: (a) refactor to match plan, (b) update plan to match reality, or (c) accept drift.
 - Do not defer decisions to the Developer. Make them here.
+- Do not design for v2. Design for THIS version only.
 ```
 
 ### Implementation Plan Review Prompt (Fellow Architects)
@@ -375,27 +458,42 @@ The plan is at: {{SPEC_PATH}}
 
 You are a fellow architect reviewing this plan. Ultrathink and evaluate:
 
-1. **Reality Check**: Does this plan account for the CURRENT codebase, or does it 
-   assume things that don't exist / ignore things that do?
+## GATE CHECK (Do These FIRST — Stop if Failed)
 
-2. **Assumption Audit**: Review the Assumptions section.
+**1. Reality Check (STOP if failed):**
+Does this plan account for the CURRENT codebase, or does it assume things that don't exist / ignore things that do?
+- If the plan assumes code/files that don't exist → **STOP. Reject immediately.**
+- If the plan ignores existing code it should use → **STOP. Reject immediately.**
+
+**2. Simplicity Audit (STOP if failed):**
+- Is anything being built for "future flexibility" not in the PRD? → **STOP. Reject.**
+- Are there abstractions without 3+ concrete uses? → **STOP. Reject.**
+- Could any component be deleted without breaking THIS version's requirements? → **STOP. Reject.**
+
+If EITHER gate check fails, do not waste tokens on the rest. Output your rejection with specifics.
+
+---
+
+## Full Review (Only if Gate Checks Pass)
+
+3. **Assumption Audit**: Review the Assumptions section.
    - Are they all valid?
    - What assumptions are MISSING that should be listed?
    - Is the impact assessment correct for each?
 
-3. **Completeness**: Will a coding agent have all info needed, or will it have to guess?
+4. **Completeness**: Will a coding agent have all info needed, or will it have to guess?
 
-4. **Correctness**: Does this actually solve what the PRD requires?
+5. **Correctness**: Does this actually solve what the PRD requires?
 
-5. **Continuity**: Does this build sensibly on {{PREV_VERSION}}, or does it ignore 
+6. **Continuity**: Does this build sensibly on {{PREV_VERSION}}, or does it ignore 
    decisions/constraints from previous implementations?
 
-6. **Risk Assessment**:
+7. **Risk Assessment**:
    - What's the worst-case scenario if this ships as-is?
    - What's the most LIKELY failure mode?
    - What would you add to prevent these?
 
-7. **What would you have done differently?**
+8. **What would you have done differently?**
 
 Be specific. If you'd change the API design, show your alternative.
 If you'd use a different pattern, explain why.
@@ -403,14 +501,23 @@ If you'd use a different pattern, explain why.
 Don't just validate—take a position. I need your independent technical judgment.
 
 Output:
+## Gate Check Results
+- Reality Check: [PASS/FAIL — if FAIL, stop here with explanation]
+- Simplicity Audit: [PASS/FAIL — if FAIL, stop here with explanation]
+
 ## Assessment
 [Overall: Ready / Needs Revision / Major Rework]
 
-## Assumption Audit
-[Valid / Missing / Incorrect assumptions]
+## Simplicity Audit Details
+- Over-engineering found: [Yes/No]
+- Speculative features: [list any "future flexibility" that should be cut]
+- Unnecessary abstractions: [list any that lack 3+ concrete uses]
 
 ## Reality Alignment
 [Does this match what actually exists in the codebase?]
+
+## Assumption Audit
+[Valid / Missing / Incorrect assumptions]
 
 ## Risk Assessment
 - Worst case: [X]
@@ -439,6 +546,11 @@ Read all reviews carefully. For each piece of feedback:
 2. **If you disagree**: Write a brief response explaining why your approach is better
 3. **If it's a tradeoff**: Note both options and flag for user decision
 
+**Special attention to Simplicity Audit feedback:**
+If reviewers flagged over-engineering, you must either:
+- Remove the flagged complexity, OR
+- Provide specific PRD requirement that necessitates it (not "future flexibility")
+
 After addressing all feedback:
 - Save the updated spec to {{SPEC_PATH}}
 - Create a changelog at the top of the spec summarizing what changed:
@@ -447,6 +559,7 @@ After addressing all feedback:
   - v2: Addressed architect reviews (YYYY-MM-DD)
     - Changed X per [Architect A] feedback
     - Kept Y despite [Architect B] suggestion because [reason]
+    - REMOVED: [complexity that was cut based on simplicity audit]
     - FLAG FOR DECISION: [tradeoff that needs user input]
   ```
 
@@ -454,6 +567,7 @@ Do NOT:
 - Ignore feedback without addressing it
 - Make the spec vague to avoid conflict
 - Remove detail to "simplify" unless the detail was actually wrong
+- Justify complexity with "future flexibility" — that's not a valid reason
 
 The goal is a spec so clear that a coding agent won't need to make judgment calls.
 ```
@@ -470,6 +584,10 @@ Review the updates. For each piece of your original feedback:
 1. **Addressed adequately**: Note it's resolved
 2. **Not addressed / disagree with response**: Explain why, be specific
 3. **New concerns**: If the changes introduced new issues, flag them
+
+**Verify Simplicity Audit responses:**
+- If you flagged over-engineering, was it removed or justified with a specific PRD requirement?
+- "Future flexibility" is NOT a valid justification
 
 Output:
 ## Resolved
@@ -499,6 +617,7 @@ Read the NEW feedback only. Address it following the same rules:
 - Agree → update spec
 - Disagree → explain why
 - Tradeoff → flag for user decision
+- Simplicity concern → remove complexity OR cite specific PRD requirement
 
 Update the revision history. Focus on the delta.
 
@@ -563,11 +682,58 @@ When complete:
 - Description: Summarize what was implemented, reference the spec
 - Request review
 
+## CONSTRAINT: Code for Humans
+
+Write code that a developer unfamiliar with the project can understand quickly.
+
+**Readability Rules:**
+- No metaprogramming (metaclasses, dynamic attribute generation) unless spec explicitly requires it
+- No clever one-liners. Prefer 3 clear lines over 1 cryptic line.
+- No deep inheritance hierarchies. Prefer composition or simple functions.
+- Name variables for what they contain, functions for what they do.
+
+**Abstraction Rules:**
+- Do NOT create base classes with one implementation
+- Do NOT create utility functions used only once
+- Do NOT split logic across files just for "cleanliness" — keep related code together
+- If a function needs a comment explaining what it does, rename the function instead
+
+**Locality Rule:**
+Keep related logic together. It's better to have a 80-line function that tells a complete story than five 20-line functions scattered across files that require jumping around to understand.
+
+BUT: If a function exceeds 100 lines, it's probably doing too much. Look for natural boundaries.
+
 CRITICAL: Implement ONLY what's specified. If you think something should be 
 added or improved, STOP and ask. Do not make judgment calls.
 
+## REFUSAL AUTHORITY: Complexity Flag
+
+You have the authority to REFUSE implementation if the spec violates engineering principles.
+
+**If the spec asks you to implement any of the following, STOP and raise a ComplexityFlag:**
+- A "plugin system" or "extension point" with no concrete plugins listed
+- An interface/abstract class with only one implementation
+- A configuration system for values that are hardcoded everywhere else
+- A generic solution when only one specific case exists
+- Any pattern justified by "future flexibility" rather than current requirements
+
+**How to raise a ComplexityFlag:**
+```
+⚠️ COMPLEXITY FLAG
+
+I cannot implement [X] as specified because it violates [YAGNI/DRY/KISS]:
+- Spec asks for: [what the spec says]
+- Problem: [why this is over-engineering]
+- Suggestion: [simpler alternative]
+
+Awaiting decision before proceeding.
+```
+
+This is not insubordination—it is quality control. The spec may have passed review with latent complexity. You are the last line of defense.
+
 Do NOT:
 - Add features not in the spec (scope creep)
+- Add "helpful" abstractions not in the spec
 - Skip tests to save time
 - Make architectural decisions—those were already made
 - Merge your own PR
@@ -703,7 +869,7 @@ Implementation Spec (for reference): {{SPEC_PATH}}
 
 ### Adversarial Reviewer Prompt
 ```
-You are a security-minded engineer whose job is to FIND PROBLEMS in {{VERSION}}.
+You are an engineer whose job is to FIND PROBLEMS in {{VERSION}}.
 
 Your default stance is to reject. You are looking for reasons this code should NOT be merged.
 
@@ -711,7 +877,38 @@ PR: {{PR_URL}}
 Spec: {{SPEC_PATH}}
 Note: Other reviewers may have approved. Be skeptical.
 
-## Attack Vectors to Try (REQUIRED — list what you actually tested)
+## Attack Surface 1: Architectural Bloat (DO THIS FIRST)
+
+Complexity is harder to spot than bugs. Audit for unnecessary complexity FIRST while your attention is fresh.
+
+Hunt for UNNECESSARY COMPLEXITY with the same rigor as bugs:
+
+**Speculative Generality:**
+- Code handling scenarios NOT in the PRD or spec
+- Interfaces/abstractions with only one implementation
+- Configuration options that have only one value
+- "Plugin systems" or "extension points" with no plugins
+- *Verdict: Demand deletion*
+
+**Resume-Driven Development:**
+- Design patterns (Factory, Strategy, Decorator, Observer) used for simple linear logic
+- Inheritance hierarchies that could be flat functions
+- "Enterprise" patterns in a solo developer project
+- *Verdict: Demand simplification*
+
+**Dependency Bloat:**
+- New library imports where stdlib works with reasonable effort
+- Multiple libraries doing similar things
+- Heavy frameworks for simple tasks
+- *Verdict: Demand justification or removal*
+
+**Premature Abstraction:**
+- Utility functions used only once
+- Base classes with single child
+- "Helper" modules that obscure rather than clarify
+- *Verdict: Demand inlining*
+
+## Attack Surface 2: Security & Correctness
 
 **Input Validation:**
 - Null/undefined input
@@ -738,14 +935,27 @@ Note: Other reviewers may have approved. Be skeptical.
 
 ## Output Format (REQUIRED — vague responses will be rejected)
 
-## Attack Vectors Tested
+## Complexity Attack Vectors Tested (FIRST)
+[For EACH category, identify what you found]
+- Speculative Generality: [Found/None] — [details]
+- Resume-Driven Development: [Found/None] — [details]  
+- Dependency Bloat: [Found/None] — [details]
+- Premature Abstraction: [Found/None] — [details]
+
+## Unnecessary Complexity Found
+[List each instance with specific demand]
+- [Component]: Delete because [not in spec/only one use]
+- [Pattern]: Simplify to [alternative] because [reasoning]
+- [Dependency]: Remove because [stdlib alternative]
+
+## Security Attack Vectors Tested
 [For EACH category above, specify what you tried and what happened]
-Example: "SQL injection in name field: Tried `'; DROP TABLE users; --` — properly escaped, no vulnerability"
 
 ## Issues Found
-[Severity with exploitation scenario]
+[Severity with exploitation scenario OR simplification demand]
 - CRITICAL: [X] — Attacker could [Y] by doing [Z]
 - MAJOR: [X] — Edge case [Y] causes [Z]
+- BLOAT: [X] — Should be [simpler alternative] because [reasoning]
 
 ## Edge Cases Not Handled
 [Specific scenarios with reproduction steps]
@@ -756,12 +966,13 @@ Example: "SQL injection in name field: Tried `'; DROP TABLE users; --` — prope
 ## Verdict
 BLOCK (with specific requirements to unblock)
 — or —
-RELUCTANT APPROVE: "I tested [X, Y, Z]. The code handles them because [specific defenses]. I could not find a way to break this."
+RELUCTANT APPROVE: "I audited for [complexity patterns] and tested [security vectors]. The code is both appropriately simple AND secure because [specific reasoning]."
 
 NOT ACCEPTABLE:
 - "Looks good"
 - "I tried to break it and couldn't" (without specifics)
-- Any response under 200 words
+- Any response under 300 words
+- Approving complexity without justification
 ```
 
 ### Synthesizer Prompt
@@ -776,8 +987,10 @@ They will NOT read the raw reviews. If you miss something, they'll never see it.
 ## Critical Rules
 1. If reviewers DISAGREE, flag prominently — do not smooth over conflicts
 2. If ANY reviewer found a security issue, it goes at the TOP
-3. Compress, but don't lose decision-changing information
-4. Assess reviewer quality — flag shallow reviews
+3. If ANY reviewer found unnecessary complexity, flag it prominently
+4. Compress, but don't lose decision-changing information
+5. Assess reviewer quality — flag shallow reviews
+6. **SIDE WITH THE PESSIMIST:** If Code Reviewer says "Pass" but Adversarial Reviewer says "Bloat" or "Block", the default recommendation is **BLOCK**. Complexity is sticky; bugs are transient. It is harder to remove bloat later than to fix a bug now.
 
 ## Output Format
 
@@ -792,6 +1005,9 @@ They will NOT read the raw reviews. If you miss something, they'll never see it.
 
 ## Critical Issues (if any)
 [Security issues first, then blockers]
+
+## Complexity Concerns (if any)
+[Any over-engineering flagged by Adversarial Reviewer]
 
 ## Reviewer Consensus
 [What all reviewers agreed on]
@@ -821,6 +1037,7 @@ Ultrathink and review their syntheses. Consider:
 - What did the other synthesizers miss or compress away?
 - Where do they disagree, and who's more right?
 - What would change the product owner's decision that got lost?
+- Did any synthesizer downplay complexity concerns?
 
 Be open-minded while keeping your integrity. Don't defer to consensus if you 
 think the consensus is wrong.
@@ -853,20 +1070,26 @@ Your job: Update the Master Plan to reflect reality.
    - Does the codebase match what the Master Plan says should exist?
    - Are there deviations (intentional pivots vs. accidental drift)?
 
-2. **Update Master Plan**
+2. **Complexity Audit**
+   - Did any unnecessary complexity ship despite review?
+   - Are there simplification opportunities for next version?
+
+3. **Update Master Plan**
    - Mark {{VERSION}} as complete
    - Update any sections that no longer match reality
    - Note any architectural decisions that emerged during implementation
 
-3. **Implications for Next Version**
+4. **Implications for Next Version**
    - Does anything in the plan for future versions need to change?
    - Are there new constraints from what was just built?
+   - Are there simplification opportunities to add to next version scope?
 
 ## Output
 Updated MASTER_PLAN.md with:
 - {{VERSION}} marked complete
 - Reality-aligned descriptions
 - Notes on any drift and whether it was intentional
+- Simplification opportunities identified
 - Updated guidance for upcoming versions
 ```
 
@@ -945,6 +1168,9 @@ I'll verify this matches my understanding.
 ### Out of Scope
 [What's explicitly excluded]
 
+## Cut List (Deferred to V2+)
+[Features explicitly cut with reasoning]
+
 ## Success Metrics
 [How we'll measure success]
 ```
@@ -957,7 +1183,7 @@ I'll verify this matches my understanding.
 [System diagram, major components]
 
 ## Tech Stack
-[Technologies chosen and why]
+[Technologies chosen and why — with Complexity Tradeoffs for non-boring choices]
 
 ## Version Roadmap
 
