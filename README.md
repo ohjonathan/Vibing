@@ -23,7 +23,7 @@ LLM architects write specs (review each other until converged)
     ↓
 LLM developer writes code
     ↓
-LLM reviewers review (including adversarial reviewer who tries to break it)
+LLM reviewers review (including adversarial reviewer who hunts bugs AND complexity)
     ↓
 LLM synthesizers compress reviews for your decision
     ↓
@@ -31,6 +31,19 @@ You approve or request changes
     ↓
 Merge
 ```
+
+## Philosophy: Simplicity Over Cleverness
+
+This workflow enforces **engineering constraints** at every stage to combat "sycophancy of complexity" — the tendency of LLMs to over-engineer solutions to demonstrate competence.
+
+**Built-in constraints:**
+- **YAGNI**: No generic interfaces until 3+ implementations exist
+- **Boring Tech**: SQLite over Postgres, monolith over microservices, in-process over networked
+- **Cut List**: Product Architect must explicitly defer non-essential features
+- **ComplexityFlag**: Developer can REFUSE to implement over-engineered specs
+- **Complexity Audit**: Adversarial Reviewer hunts unnecessary abstraction with the same rigor as bugs
+
+Complexity is treated as a liability, not an asset.
 
 ## Quick Start
 
@@ -42,10 +55,11 @@ Merge
 
 ## Key Concepts
 
-- **Spec Convergence**: Multiple architect LLMs review specs until they agree
-- **Adversarial Review**: One reviewer is prompted to find problems, not approve
+- **Spec Convergence**: Multiple architect LLMs review specs until they agree — with Gate Checks that reject speculative design upfront
+- **Adversarial Review**: One reviewer is prompted to reject by default — hunting both bugs AND architectural bloat
 - **Model Diversity**: Use different models for developer vs. reviewers to avoid shared blind spots
 - **Anti-Sycophancy**: Prompts force LLMs to take positions, not just validate
+- **Side with the Pessimist**: When reviewers disagree on complexity, default is BLOCK
 
 ## Dependencies
 
