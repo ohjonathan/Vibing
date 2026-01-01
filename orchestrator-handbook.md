@@ -1,67 +1,21 @@
-# Orchestrator Handbook
+# Orchestrator Handbook v1.2
+
 > Your reference guide for running an LLM-augmented development workflow
-> Last updated: December 2024
+> Pattern: Parallel fan-out with 2 decision gates
 
 ---
 
-## How to Use This Document
+## Quick-Start
 
-**Audience:** This document is for you, the human orchestrator. For LLM prompts and role definitions, see [llm-development-playbook.md](llm-development-playbook.md).
+**Step 1:** Copy [session-template.md](session-template.md) to `sessions/[version].md`
 
-**To generate prompts:** Give llm-development-playbook.md to an LLM along with your variables (see Quick-Start below).
+**Step 2:** Fill in session variables at the top
 
-**Context Persistence:** This playbook assumes [Project Ontos](https://github.com/ohjona/Project-Ontos) handles context sync between agents.
+**Step 3:** Follow the template step-by-step — it provides ready-to-copy prompts
 
----
+**Step 4:** Make decisions at the two gates
 
-## Quick-Start: The Generator Prompt
-
-**Step 1:** Open [session-variables.md](session-variables.md) and fill in your values for this session.
-
-**Step 2:** Give an LLM these three things:
-1. [llm-development-playbook.md](llm-development-playbook.md)
-2. [session-variables.md](session-variables.md) (with your values filled in)
-3. The Generator Prompt below
-
-**Step 3:** Get all your prompts generated at once.
-
-### Generator Prompt
-
-\`\`\`
-I'm starting a work session. 
-
-My session variables are in the attached session-variables.md file.
-
-Based on the LLM Development Playbook, generate ready-to-paste prompts for:
-
-**Spec Convergence Phase:**
-1. Implementation Architect (writing the spec)
-2. Implementation Plan Review (for fellow architects - initial)
-3. Implementation Architect Response to Review
-4. Fellow Architects Re-Review
-5. Implementation Architect Iteration (for round 2+)
-6. Spec Finalization (after convergence)
-
-**Development Phase:**
-7. Development Initiation (kick off coding)
-
-**Code Review Phase:**
-8. Code Review (for reviewers - initial)
-9. Adversarial Review
-10. Developer Response to Review
-11. Code Reviewer Re-Review
-12. Developer Iteration (for round 2+)
-
-**Synthesis & Post-Ship:**
-13. Synthesizer
-14. Synthesis Cross-Review
-15. Chief Architect Reality Sync (if version just shipped)
-
-**Utility:**
-16. Context Refresh (when sensing context drift)
-
-Substitute my variable values from session-variables.md. Output each prompt in a code block I can copy.
-\`\`\`
+That's it. The template guides you through the entire workflow.
 
 ---
 
@@ -71,203 +25,154 @@ You are the **Product Owner**, **Decision Maker**, and **Manual Orchestrator**. 
 - They propose, you dispose
 - They execute, you validate direction
 - They review each other, you break ties
-- **You trigger every handoff**—nothing moves without you asking the next agent to work
+- **You trigger every handoff** — nothing moves without you
 
-Your competitive advantage isn't coding—it's judgment, taste, and knowing what to build.
+### The Two Gates
+
+Your only mandatory decision points:
+
+```
+┌──────────────────────────────────────────┐
+│  1. PROCEED TO DEVELOPMENT?              │
+│     After Architect revision             │
+│     You've seen all critic feedback      │
+│     You decide: build or clarify scope   │
+├──────────────────────────────────────────┤
+│  2. MERGE?                               │
+│     After code review consolidation      │
+│     You've seen complexity concerns      │
+│     You decide: ship or address issues   │
+└──────────────────────────────────────────┘
+```
+
+Everything else is execution. The template guides you through it.
 
 ### Core Principle: Simplicity Over Cleverness
 
-This workflow enforces **engineering constraints** (YAGNI, DRY, KISS) at every stage:
-- Product Architect must produce a "Cut List" of deferred features
-- Chief Architect must justify any non-boring technology
-- Implementation Architect designs for THIS version only
-- Developer can REFUSE to implement over-engineered specs
-- Adversarial Reviewer hunts complexity with the same rigor as bugs
+This workflow enforces **engineering constraints** at every stage:
+- Architect must produce a "Cut List" of deferred features
+- Critics hunt for over-engineering (especially Adversarial)
+- Developer can REFUSE to implement over-engineered specs (ComplexityFlag)
+- Reviewers audit complexity FIRST, before looking for bugs
 
 Complexity is treated as a liability, not an asset.
 
-### Your Operating Model
-\`\`\`
-┌─────────────────────────────────────────────────────────┐
-│                         YOU                              │
-│  ┌─────────────────────────────────────────────────┐    │
-│  │ • Write strategy & product vision               │    │
-│  │ • Trigger each LLM to do their job              │    │
-│  │ • Review synthesized outputs (not raw code)     │    │
-│  │ • Make go/no-go decisions at each gate          │    │
-│  │ • Direct debugging when things break            │    │
-│  └─────────────────────────────────────────────────┘    │
-│                           │                              │
-│                           ▼                              │
-│    ┌──────────┬──────────┬──────────┬──────────┐        │
-│    │Strategist│ Architect│ Developer│ Reviewer │  ...   │
-│    └──────────┴──────────┴──────────┴──────────┘        │
-└─────────────────────────────────────────────────────────┘
-\`\`\`
-
-You don't read code. You read summaries, make decisions, and approve merges.
-
 ---
 
-## Role Monitoring Guide
+## Role Monitoring (Simplified)
 
-For each role, here's what you watch for and when to intervene.
+### Architect
+**Watch for:** Scope creep, YAGNI violations, speculative design
+**Red flag:** "This will allow us to easily..." — that's a YAGNI violation
+**Action:** Send back with "Remove the flexibility, design for THIS version only"
 
-### Strategist
-**Your job:** Ensure output matches your vision, cut scope creep
+### Developer
+**Watch for:** Stuck loops, scope creep, ComplexityFlags
+**Red flags:**
+- "I'll also improve/refactor X" → STOP, scope creep
+- "Should I do X or Y?" → Spec was ambiguous; clarify before continuing
+- 10+ file changes when spec mentioned 3 → Review diff before proceeding
+- 30+ minutes with no output → May be stuck
 
-### Product Architect
-**Your job:** Ensure PRD matches your vision, verify Cut List exists and makes sense
-**Watch for:** Cutting essential features just to satisfy the constraint — Cut List can be empty if justified
-
-### Chief Architect
-**Your job:** Sanity check complexity, approve phase boundaries, verify "boring tech" defaults
-**Watch for:** Unjustified complexity — if there's no Complexity Tradeoff section for non-standard tech, send back
-**Ongoing:** After each version ships, trigger Reality Sync to keep Master Plan aligned with reality
-
-### Implementation Architect
-**Your job:** Decide on flagged tradeoffs; approve when all architects converge
-**Watch for:** Speculative design ("this will allow us to easily...") — that's YAGNI violation
-
-### Developer (Agentic)
-**Your job:**
-- Monitor for stuck states (same error 3+ times)
-- Watch for scope creep (changes not in spec)
-- Intervene if agent asks a question and waits indefinitely
-- Verify PR matches spec before requesting review
-- **Handle ComplexityFlags when raised**
-
-**Red Flags:**
-- Developer says "I'll also improve/refactor X" → STOP, that's scope creep
-- Developer asks "Should I do X or Y?" → Spec was ambiguous; clarify before continuing
-- Developer commits 10+ files when spec mentioned 3 → Review diff before proceeding
-- Developer has been running 30+ minutes with no output → May be stuck
-
-**Intervention phrase:** "Stop. Show me what you've done so far. Let's verify we're on track before continuing."
+**Intervention phrase:** "Stop. Show me what you've done so far. Let's verify we're on track."
 
 **Handling ComplexityFlags:**
-The Developer has authority to REFUSE implementation if the spec violates engineering principles. When you see a ComplexityFlag:
-
-\`\`\`
+When Developer raises a flag:
+```
 ⚠️ COMPLEXITY FLAG
 I cannot implement [X] as specified because it violates [YAGNI/DRY/KISS]:
 - Spec asks for: [what]
 - Problem: [why over-engineered]
 - Suggestion: [simpler alternative]
-\`\`\`
+```
 
-**Your response options:**
-1. **Accept the flag:** Update spec to use simpler alternative, then continue
-2. **Override with justification:** Explain why the complexity IS needed (cite specific PRD requirement)
-3. **Escalate:** If unclear, ask Implementation Architect to clarify intent
+Your options:
+1. **Accept:** Use simpler alternative, update spec
+2. **Override:** Explain why complexity IS needed (cite specific PRD requirement)
+3. **Escalate:** If unclear, ask Architect to clarify intent
 
 ComplexityFlags are quality control, not insubordination. Take them seriously.
 
-### Code Reviewer
-**Your job:** Read synthesis, break ties, final merge decision
+### Reviewers
+**Watch for:** Rubber-stamp approvals, vague feedback, shallow reviews
+**Rule:** Side with Adversarial on complexity concerns
 
-### Adversarial Reviewer
-**Your job:** If they find real issues, block merge. If they provide vague approval, send back for more detail.
-
-**Expanded Mandate:** Adversarial Reviewer now hunts for **complexity AND bugs**, with complexity audited FIRST.
-
-**Invalid outputs (send back):**
+**Invalid Adversarial outputs (send back):**
 - "Looks good, I couldn't find issues" — Too vague
-- "I tried hard to break it" — What specifically?
 - Short review (<300 words) — Not thorough
 - No complexity audit section — Must check for bloat
-- Approves complexity without justification — Must explain why it's necessary
-
-### Synthesizer
-**Your job:** Read the synthesis, make decisions. If synthesizers disagree, dig into raw reviews.
-
-**New rule:** Synthesizer "sides with the pessimist" — if Code Reviewer approves but Adversarial blocks for complexity, default is BLOCK.
-
-### Debugger
-**Your job:** Direct which errors to prioritize, approve fix approach
-
-### QA Analyst
-**Your job:** Prioritize which bugs matter
+- Approves complexity without justification — Must explain why necessary
 
 ---
 
-## Quality Gates
+## Parallel Execution Guide
 
-### Before Phase 3 (Implementation Planning)
-- [ ] Strategy approved by you
-- [ ] PRD reviewed and scope locked
-- [ ] PRD includes Cut List (or explicit "Scope is Minimal" statement)
-- [ ] Master plan phase boundaries make sense
-- [ ] Master plan uses boring tech (or has Complexity Tradeoffs)
+The power of v1.2 is parallel fan-out. Don't wait for responses sequentially.
 
-### Before Phase 4 (Development)
-- [ ] Implementation spec passed Gate Check (Reality + Simplicity)
-- [ ] Implementation spec has Assumptions section
-- [ ] All architects have converged (not just stopped arguing)
-- [ ] You've decided on all flagged tradeoffs
-- [ ] Spec is detailed enough that Developer won't need judgment calls
-- [ ] No speculative "future flexibility" in the spec
+### Spec Critics (Phase 1)
+Send to **Claude, Gemini, and GPT simultaneously**:
+- Don't wait for Claude before sending to Gemini
+- Don't wait for Gemini before sending to GPT
+- Gather all three, then consolidate
 
-### Before Merge
-- [ ] Code Reviewer approved with spec citations
-- [ ] Adversarial Reviewer completed complexity audit FIRST
-- [ ] Adversarial Reviewer listed specific attack vectors tried
-- [ ] Adversarial Reviewer response is 300+ words
-- [ ] Synthesizer flagged any shallow reviews
-- [ ] No unresolved conflicts between reviewers
-- [ ] If Adversarial flagged bloat, it's resolved or you've explicitly accepted it
-- [ ] You've read synthesis and made decision
+### Code Reviewers (Phase 3)
+Send to **Standard and Adversarial simultaneously**:
+- Don't wait for Standard before sending to Adversarial
+- Gather both, then consolidate
 
-### Before Shipping Version
-- [ ] Acceptance criteria validated by QA
-- [ ] Critical bugs fixed
-- [ ] You've actually used it yourself
+**Why this matters:** Sequential execution was the main overhead in v1.1. Parallel execution cuts handoffs by ~50%.
+
+---
+
+## One Revision Cap
+
+If major issues persist after one revision:
+- **Requirements were unclear** → Fix requirements, don't iterate on spec
+- **Scope is too large** → Split the feature
+- **Fundamental disagreement** → You decide
+
+More rounds don't fix these. They defer the problem.
+
+**Rationale:** Convergence loops in v1.1 averaged 3-5 rounds. Most value came in round 1. Later rounds were often exhaustion, not agreement. Force clarity upfront instead.
 
 ---
 
 ## Emergency Procedures
 
 ### E1: Developer Stuck in Loop
-**Protocol:**
 1. STOP the agent immediately
 2. Read the last 3 attempts yourself
 3. Identify what assumption is wrong
 4. Restart with explicit constraint: "Do NOT try [X] again. The issue is [Y]. Try [Z] instead."
 
 ### E2: Post-Merge Bug Discovered
-**Protocol:**
 1. REVERT immediately. Do not debug on main.
 2. Create hotfix branch from last known good commit
 3. Fix → Single focused review → Merge
 4. Add Post-Mortem to session log
 
 ### E3: Security Vulnerability Found
-**Protocol:**
 1. Do NOT discuss in public PR comments or issues
 2. Assess severity: Critical/High/Medium/Low
 3. After fix: Document in private security log
 
 ### E4: Agentic Developer Goes Rogue
-**Protocol:**
 1. STOP the agent
-2. git diff to see actual changes vs. expected
-3. git checkout or git revert as needed
+2. `git diff` to see actual changes vs. expected
+3. `git checkout` or `git revert` as needed
 4. Restart with explicit constraint
 
 ### E5: Context Collapse
-**Protocol:**
 1. Do NOT continue
 2. Use the Context Refresh prompt
 3. Correct or start fresh session
 
 ### E6: Reviewers All Approve Too Easily
-**Protocol:**
 1. Do NOT merge
 2. Ask specific questions about what they reviewed
 3. Add new reviewer with "find something wrong" instruction
 
 ### E7: Developer Raises ComplexityFlag
-**Protocol:**
 1. READ the flag carefully
 2. Evaluate: Is the simpler alternative viable?
 3. Accept / Override / Escalate
@@ -275,46 +180,50 @@ ComplexityFlags are quality control, not insubordination. Take them seriously.
 
 ---
 
-## Escalation Matrix
+## Escalation Matrix (Simplified)
 
-### Architect Disagreements
-| Scenario | Resolution |
+| Conflict | Resolution |
 |----------|------------|
-| 2 agree, 1 disagrees | Dissenter provides alternative; stronger wins |
-| All 3 disagree | You decide after asking each for core concern |
-| Simplicity audit fails | Must cite SPECIFIC PRD requirement or simplify |
+| Critics disagree | Consolidator synthesizes; you decide on conflicts |
+| Adversarial blocks, Standard approves | **Adversarial wins by default** |
+| ComplexityFlag raised | You decide: Accept / Override / Escalate |
+| Major issues after revision | Split scope or clarify requirements |
+| Reviewers all approve too easily | Add skeptical reviewer, don't merge |
 
-### Review Disagreements
-| Scenario | Resolution |
-|----------|------------|
-| Code Reviewer approves, Adversarial blocks | **Adversarial wins by default** |
-| Adversarial flags bloat, others approve | **Side with pessimist** — default is BLOCK |
-
-### Convergence Stalls
-| Scenario | Resolution |
-|----------|------------|
-| 5 rounds, still debating | **Mandatory scope split** |
-| Exhaustion ≠ agreement | Require: "I agree this is better because [X]" |
+**Side with the pessimist:** Complexity is sticky; bugs are transient. It's harder to remove bloat later than to fix a bug now.
 
 ---
 
-## Failure Modes Catalog
+## Quality Checklist
 
-| Failure Mode | Prevention |
-|--------------|------------|
-| **Spec Drift** | Require spec-citation in code review |
-| **Review Theater** | Require specific line citations; use Adversarial |
-| **Scope Creep** | Not in spec = not in PR |
-| **Sycophancy Cascade** | Use different models |
-| **Complexity Debt** | Gate Check, ComplexityFlag, Adversarial audit |
+### Before Development (Gate 1)
+- [ ] Spec has Assumptions section
+- [ ] Cut List exists (or "Scope is Minimal" justified)
+- [ ] Complexity concerns from Adversarial Critic addressed
+- [ ] No speculative "future flexibility" in spec
+- [ ] Spec is detailed enough that Developer won't need judgment calls
+- [ ] **Your decision: PROCEED**
+
+### Before Merge (Gate 2)
+- [ ] Adversarial Reviewer completed complexity audit FIRST
+- [ ] Adversarial review is 300+ words
+- [ ] No unresolved conflicts between reviewers
+- [ ] If Adversarial flagged bloat, it's resolved or explicitly accepted
+- [ ] **Your decision: MERGE**
 
 ---
 
 ## Quick Reference
 
+### Key Rules
+- **Parallel fan-out:** Send to multiple models simultaneously, don't wait
+- **One revision cap:** If major issues persist, scope is wrong
+- **Side with pessimist:** If Adversarial blocks, default is BLOCK
+- **ComplexityFlags are valid:** Developer can refuse over-engineered specs
+
 ### Anti-Sycophancy Triggers
 - "What would YOU have done differently?"
-- "Ultrathink" / "Think step by step" / "Take your time"
+- "Ultrathink" / "Think step by step"
 - "Keep your integrity"
 - "What's the strongest argument AGAINST this?"
 
@@ -329,14 +238,8 @@ ComplexityFlags are quality control, not insubordination. Take them seriously.
 | Developer looping | Stop → Read → Constrain |
 | Post-merge bug | Revert first |
 | ComplexityFlag raised | Read → Accept/Override/Escalate |
-
-### Quality Gates Checklist
-- [ ] PRD has Cut List
-- [ ] Spec passed Gate Check
-- [ ] Adversarial completed complexity audit FIRST
-- [ ] Adversarial review is 300+ words
-- [ ] No unresolved conflicts
+| Reviewers too easy | Add skeptical reviewer |
 
 ---
 
-*This document is for you. To generate prompts, give an LLM llm-development-playbook.md and session-variables.md with your values filled in.*
+*For the session workflow, use [session-template.md](session-template.md). For LLM prompts and role definitions, see [llm-development-playbook.md](llm-development-playbook.md).*

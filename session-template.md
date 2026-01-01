@@ -1,141 +1,61 @@
-# LLM Development Playbook v1.2
+# Session: {{PROJECT}} — {{VERSION}}
 
-> Prompt library and workflow reference for LLM-augmented development
-> Pattern: Parallel fan-out with single consolidation
-
----
-
-## How to Use This Document
-
-**Audience:** This document is for LLMs generating prompts. For human reference (emergencies, escalation, decision gates), see [orchestrator-handbook.md](orchestrator-handbook.md).
-
-**Primary workflow:** Use [session-template.md](session-template.md) for each feature. It provides ready-to-copy prompts with your session variables already templated.
-
-**When to use this playbook:**
-- Reference for role definitions and constraints
-- Understanding the parallel workflow pattern
-- Anti-sycophancy patterns and complexity constraints
+> Copy this template for each new feature. Update status as you progress.
+> This document tracks your progress and provides ready-to-copy prompts.
 
 ---
 
-## Quick Navigation
+## Quick Status
 
-### Roles (Simplified)
-[Architect](#architect) · [Critic](#critic) · [Developer](#developer) · [Reviewer](#reviewer) · [Chief Architect](#chief-architect) · [Consolidator](#consolidator)
-
-### Prompts by Phase
-1. **Spec Creation:** Architect → Parallel Critics → Consolidator → Architect Revision
-2. **Development:** Developer (with ComplexityFlag authority)
-3. **Review:** Parallel Reviewers → Review Consolidator
-4. **Post-Ship:** Reality Sync
-
-### Key Differences from v1.1
-| Aspect | v1.1 | v1.2 |
-|--------|------|------|
-| Architect roles | 4 (Strategist, Product, Chief, Implementation) | 2 (Architect + Chief for major decisions) |
-| Spec review | Sequential convergence (3-5 rounds) | Parallel fan-out + 1 revision |
-| Code review | Sequential (4+ roles) | Parallel (2 roles) + consolidate |
-| Iteration cap | 3-5 rounds | 1 revision |
-| Session management | Static playbook + manual variables | Stateful session document |
+| Field | Value |
+|-------|-------|
+| **Phase** | [ ] Spec → [ ] Development → [ ] Review → [ ] Complete |
+| **Current Step** | _[Update this as you progress]_ |
+| **Blocking** | None |
+| **Models Used** | Architect: ___ / Critics: ___ / Developer: ___ / Reviewers: ___ |
 
 ---
 
-## Roles
+## Session Variables
 
-### Architect
-**What they do:** Write implementation specs, address critic feedback in one revision
-**Input:** Requirements, previous spec (if applicable), current codebase context
-**Output:** Detailed implementation spec with assumptions, test strategy, developer instructions
-**Constraint:** Design for THIS version only. No speculative abstractions. Must include Cut List.
-
-### Critic
-**What they do:** Review specs from different angles (Standard, Technical, Adversarial)
-**Input:** Architect's spec
-**Output:** Verdict (APPROVE / NEEDS REVISION / MAJOR CONCERNS) with specific issues
-**Variants:**
-- **Standard (Claude):** Reality check, completeness, correctness, simplicity audit
-- **Technical (Gemini):** Feasibility, API design, data models, implementation order
-- **Adversarial (GPT):** Complexity audit FIRST, assumption attacks, edge cases, security
-
-### Developer
-**What they do:** Implement exactly what the spec says, create PR
-**Input:** Final approved spec, branch name
-**Output:** Working code, PR ready for review
-**Authority:** Can raise ComplexityFlag to refuse over-engineered specs
-**Constraint:** Write readable, concrete code. No cleverness. No scope creep.
-
-### Reviewer
-**What they do:** Review PRs for correctness and spec compliance
-**Input:** PR diff, implementation spec
-**Output:** Verdict (APPROVE / REQUEST CHANGES / BLOCK) with specific issues
-**Variants:**
-- **Standard:** Spec compliance, code quality, test coverage, risk assessment
-- **Adversarial:** Complexity audit FIRST, security vectors, demanded changes
-
-### Chief Architect
-**When used:** Major architectural decisions, Reality Sync after shipping
-**What they do:** Break PRD into phases, choose patterns, update Master Plan after each version
-**Constraint:** Default to boring technology. Justify any complexity.
-
-### Consolidator
-**What they do:** Synthesize multiple critic or reviewer outputs into unified feedback
-**Input:** All critic/reviewer outputs
-**Output:** Prioritized list of issues, conflicts flagged, recommendation
-**Rule:** Side with pessimist — if Adversarial blocks, default is BLOCK
-
----
-
-## Workflow Overview
+Fill these in at session start:
 
 ```
-You write requirements
-        ↓
-Architect writes spec
-        ↓
-┌───────┼───────┐
-↓       ↓       ↓
-Claude  Gemini  GPT     ← Critics IN PARALLEL
-└───────┼───────┘
-        ↓
-Consolidator synthesizes
-        ↓
-Architect revises ONCE
-        ↓
-★ YOU DECIDE: Proceed to Development?
-        ↓
-Developer implements
-        ↓
-┌───────┼───────┐
-↓               ↓
-Standard    Adversarial  ← Reviewers IN PARALLEL
-└───────┼───────┘
-        ↓
-Review Consolidator
-        ↓
-★ YOU DECIDE: Merge?
-        ↓
-Done → Reality Sync
+PROJECT:
+VERSION:
+PREV_VERSION:
+BRANCH:
+SPEC_PATH:
+PR_URL:         [Fill after PR created]
 ```
-
-**Handoffs:** 6-8 per feature (down from 12-16)
-**Your decisions:** 2 clear gates
-**Model diversity:** Different models at each stage
 
 ---
 
-## Prompts Library
+## Phase 1: Spec Creation
 
-> All prompts are also available in [session-template.md](session-template.md) with ready-to-copy formatting.
+### Step 1.1: Write Requirements
+- [ ] Requirements/goals documented below
 
-### Phase 1: Spec Creation
+**Your Requirements:**
+```
+[Write your requirements here — what should this version accomplish?]
+```
 
-#### Architect Prompt
+---
+
+### Step 1.2: Architect Writes Spec
+- [ ] Spec drafted by Architect
+
+**Prompt — Copy to Claude (or preferred reasoning model):**
+
+<details>
+<summary>Click to expand Architect prompt</summary>
 
 ```
 You are the Architect for {{PROJECT}} {{VERSION}}.
 
 ## Your Inputs
-- Requirements: [paste requirements]
+- Requirements: [paste requirements from above]
 - Previous spec: {{PREV_VERSION}} (if applicable)
 - Current codebase: [describe or attach relevant context]
 
@@ -195,14 +115,46 @@ Step-by-step for the coding agent:
 
 For every component: "What breaks if I delete this?" If nothing → don't build it.
 
+---
+
+## Output Format
+
+Output a complete implementation spec with all sections above.
+
 ## Next Steps
 At the end of your response, include:
+
+### Next Steps
+Based on my spec:
 - Issues I'm uncertain about: [list any]
 - Assumptions that need validation: [list any]
 - Recommended action: [Proceed to Critic Review / Clarify requirements first]
+
+**Update session document:**
+- Mark "Step 1.2: Architect Writes Spec" complete
+- Paste spec in "Architect Output" section below
+- Proceed to Step 1.3: Parallel Critic Review
 ```
 
-#### Critic Prompt — Standard (Claude)
+</details>
+
+**Architect Output:**
+```
+[Paste Architect's spec here]
+```
+
+---
+
+### Step 1.3: Parallel Critic Review
+- [ ] All critics complete (run these IN PARALLEL — do not wait for one before starting others)
+  - [ ] Critic A (Claude)
+  - [ ] Critic B (Gemini)
+  - [ ] Critic C (GPT)
+
+**IMPORTANT:** Send to all three models simultaneously. Do not wait for responses sequentially.
+
+<details>
+<summary>Critic Prompt — Claude (Standard Review)</summary>
 
 ```
 You are a Critic reviewing an implementation spec for {{PROJECT}} {{VERSION}}.
@@ -255,12 +207,16 @@ Review this spec for issues. Be thorough but constructive.
 [Anything unclear]
 
 ## Next Steps
+Based on my review:
 - If APPROVE: Proceed to consolidation
 - If NEEDS REVISION: [specific changes required]
 - If MAJOR CONCERNS: [what must be resolved before proceeding]
 ```
 
-#### Critic Prompt — Technical (Gemini)
+</details>
+
+<details>
+<summary>Critic Prompt — Gemini (Technical Review)</summary>
 
 ```
 You are a Critic reviewing an implementation spec for {{PROJECT}} {{VERSION}}.
@@ -310,12 +266,16 @@ Review this spec with focus on technical correctness and feasibility.
 [Clarifications needed]
 
 ## Next Steps
+Based on my review:
 - If APPROVE: Proceed to consolidation
 - If NEEDS REVISION: [specific changes required]
 - If MAJOR CONCERNS: [what must be resolved]
 ```
 
-#### Critic Prompt — Adversarial (GPT)
+</details>
+
+<details>
+<summary>Critic Prompt — GPT (Adversarial Review)</summary>
 
 ```
 You are an Adversarial Critic reviewing an implementation spec for {{PROJECT}} {{VERSION}}.
@@ -389,13 +349,41 @@ For each major component: What breaks if deleted?
 [Issues that remain even if demands met]
 
 ## Next Steps
+Based on my review:
 - If REJECT: [what must change before I'd approve]
 - If RELUCTANT APPROVE: [conditions and residual risks accepted]
 
 NOT ACCEPTABLE: "Looks good" or vague approval. Minimum 300 words.
 ```
 
-#### Spec Consolidator Prompt
+</details>
+
+**Critic Outputs:**
+
+**Claude (Standard):**
+```
+[Paste Claude's review here]
+```
+
+**Gemini (Technical):**
+```
+[Paste Gemini's review here]
+```
+
+**GPT (Adversarial):**
+```
+[Paste GPT's review here]
+```
+
+---
+
+### Step 1.4: Consolidate Feedback
+- [ ] Feedback consolidated
+
+**Prompt — Consolidator (use any model):**
+
+<details>
+<summary>Consolidator Prompt</summary>
 
 ```
 You are consolidating feedback from three critics who reviewed the same spec.
@@ -406,7 +394,7 @@ You are consolidating feedback from three critics who reviewed the same spec.
 ## Your Job
 Synthesize into unified feedback for the Architect.
 
-## Output Format
+### Output Format
 
 ## Consolidated Feedback for {{VERSION}} Spec
 
@@ -434,9 +422,31 @@ Address these specific items in your revision:
 1. [Most critical item]
 2. [Second priority]
 3. [Third priority]
+...
 ```
 
-#### Architect Revision Prompt
+</details>
+
+**Consolidated Feedback:**
+```
+[Paste consolidation here]
+```
+
+**Human Decision Point:**
+Based on consolidated feedback:
+- [ ] Proceed to Architect revision
+- [ ] Need to clarify requirements first (exit to requirements)
+- [ ] Scope too large — split feature
+
+---
+
+### Step 1.5: Architect Revision (ONE ROUND ONLY)
+- [ ] Revision complete
+
+**Prompt — Architect Revision:**
+
+<details>
+<summary>Architect Revision Prompt</summary>
 
 ```
 You are the Architect revising your spec for {{PROJECT}} {{VERSION}}.
@@ -457,12 +467,13 @@ Address the feedback in ONE revision pass.
 4. For Complexity Concerns: Remove the complexity OR cite specific requirement that necessitates it
 5. "Future flexibility" is NOT a valid justification
 
-## Output Format
+### Output Format
 
 ## Revision Summary
 | Issue | Resolution | Reasoning |
 |-------|------------|-----------|
 | [Issue 1] | Fixed / Rejected / Clarified | [Why] |
+| [Issue 2] | ... | ... |
 
 ## Complexity Removals
 [What was cut and why]
@@ -474,15 +485,45 @@ Address the feedback in ONE revision pass.
 [Anything you couldn't fully address — flag for human]
 
 ## Next Steps
+Based on my revision:
 - If all critical issues addressed: Ready for Development
 - If blockers remain: [what human needs to decide]
+
+**Update session document:**
+- Mark "Step 1.5: Architect Revision" complete
+- Replace spec in "Final Spec" section
+- Proceed to Phase 2: Development
+```
+
+</details>
+
+**Final Spec:**
+```
+[Paste revised spec here — this is what goes to Developer]
 ```
 
 ---
 
-### Phase 2: Development
+### GATE: Proceed to Development?
+- [ ] **HUMAN DECISION: Approve spec for development**
 
-#### Developer Prompt
+If not approved, note blocking issues:
+```
+[What must be resolved]
+```
+
+---
+
+## Phase 2: Development
+
+### Step 2.1: Developer Implementation
+- [ ] Implementation complete
+- [ ] PR created
+
+**Prompt — Developer:**
+
+<details>
+<summary>Developer Prompt</summary>
 
 ```
 You are the Developer for {{PROJECT}} {{VERSION}}.
@@ -524,7 +565,6 @@ You may REFUSE to implement if the spec violates engineering principles.
 - Generic solution for one specific case
 
 **How to raise:**
-
 ⚠️ COMPLEXITY FLAG
 
 I cannot implement [X] as specified because it violates [YAGNI/DRY/KISS]:
@@ -541,16 +581,50 @@ When complete:
 - Description: Reference the spec, summarize implementation
 
 ## Next Steps
+At the end:
 - If complete: PR ready for review at [URL]
 - If ComplexityFlag raised: Awaiting human decision
 - If blocked: [what's blocking and what's needed]
+
+**Update session document:**
+- Mark "Step 2.1" complete
+- Fill in PR_URL
+- Proceed to Phase 3: Review
+```
+
+</details>
+
+**Developer Output:**
+```
+[Note PR URL and any issues]
+PR URL:
+ComplexityFlags raised: [None / Description]
 ```
 
 ---
 
-### Phase 3: Review
+### ComplexityFlag Resolution (if raised)
+- [ ] No flags raised — skip this section
+- [ ] Flags resolved
 
-#### Standard Reviewer Prompt
+If Developer raised ComplexityFlag:
+| Flag | Your Decision | Reasoning |
+|------|--------------|-----------|
+| [Flag description] | Accept simpler alternative / Override (cite PRD requirement) | [Why] |
+
+---
+
+## Phase 3: Code Review
+
+### Step 3.1: Parallel Review
+- [ ] All reviewers complete (run IN PARALLEL)
+  - [ ] Standard Reviewer
+  - [ ] Adversarial Reviewer
+
+**IMPORTANT:** Send to both models simultaneously.
+
+<details>
+<summary>Standard Reviewer Prompt</summary>
 
 ```
 You are reviewing a PR for {{PROJECT}} {{VERSION}}.
@@ -594,12 +668,16 @@ For each spec section:
 [Specific suggestions]
 
 ## Next Steps
+Based on my review:
 - If APPROVE: Ready for consolidation
 - If REQUEST CHANGES: [specific changes required]
 - If BLOCK: [what must change]
 ```
 
-#### Adversarial Reviewer Prompt
+</details>
+
+<details>
+<summary>Adversarial Reviewer Prompt</summary>
 
 ```
 You are an Adversarial Reviewer for {{PROJECT}} {{VERSION}}.
@@ -676,7 +754,27 @@ Your DEFAULT STANCE is to reject. Find reasons this code should NOT be merged.
 NOT ACCEPTABLE: Response under 300 words or vague approval.
 ```
 
-#### Review Consolidator Prompt
+</details>
+
+**Reviewer Outputs:**
+
+**Standard Reviewer:**
+```
+[Paste review]
+```
+
+**Adversarial Reviewer:**
+```
+[Paste review]
+```
+
+---
+
+### Step 3.2: Consolidate Reviews
+- [ ] Reviews consolidated
+
+<details>
+<summary>Review Consolidator Prompt</summary>
 
 ```
 Consolidate these two code reviews for {{VERSION}}.
@@ -711,210 +809,85 @@ Consolidate these two code reviews for {{VERSION}}.
 Address these items:
 1. [Priority 1]
 2. [Priority 2]
+...
 
 ### Residual Risks (if recommending MERGE)
 [What's accepted]
 ```
 
----
+</details>
 
-### Phase 4: Post-Ship
-
-#### Chief Architect Reality Sync Prompt
-
+**Consolidated Review:**
 ```
-{{VERSION}} has shipped and merged.
-
-Your job: Update the Master Plan to reflect reality.
-
-## Your Inputs
-- Current Master Plan: MASTER_PLAN.md
-- What was supposed to be built: {{SPEC_PATH}}
-- What was actually merged: Review the codebase
-
-## Your Tasks
-
-1. **Reality Check**
-   - Does the codebase match what the Master Plan says should exist?
-   - Are there deviations (intentional pivots vs. accidental drift)?
-
-2. **Complexity Audit**
-   - Did any unnecessary complexity ship despite review?
-   - Are there simplification opportunities for next version?
-
-3. **Update Master Plan**
-   - Mark {{VERSION}} as complete
-   - Update any sections that no longer match reality
-   - Note any architectural decisions that emerged during implementation
-
-4. **Implications for Next Version**
-   - Does anything in the plan for future versions need to change?
-   - Are there new constraints from what was just built?
-   - Are there simplification opportunities to add to next version scope?
-
-## Output
-Updated MASTER_PLAN.md with:
-- {{VERSION}} marked complete
-- Reality-aligned descriptions
-- Notes on any drift and whether it was intentional
-- Simplification opportunities identified
+[Paste consolidation]
 ```
 
 ---
 
-### Utility Prompts
+### Step 3.3: Developer Fixes (if needed)
+- [ ] No fixes needed — skip
+- [ ] Fixes applied
 
-#### Chief Architect Prompt (Major Decisions)
+If REQUEST CHANGES, Developer addresses feedback and pushes.
 
+---
+
+### GATE: Merge Decision
+- [ ] **HUMAN DECISION: Merge?**
+
+Decision: [ ] MERGE / [ ] REQUEST MORE CHANGES / [ ] BLOCK
+
+If blocked:
 ```
-You are the Chief Architect creating a master implementation plan.
-
-PRD: [paste PRD.md]
-
-Create a technical plan that includes:
-1. **System Architecture**: High-level components and their relationships
-2. **Tech Stack Decisions**: What technologies and why
-3. **Phase Breakdown**: Split into implementable versions (v1, v2, v3...)
-4. **Phase Dependencies**: What must be built before what
-5. **Risk Areas**: Where are the technical unknowns?
-
-## CONSTRAINT: The Simplicity Budget
-
-Default to BORING technology:
-- SQLite over PostgreSQL (unless >1M rows or concurrent writes)
-- Monolith over Microservices (unless independent scaling required)
-- Synchronous over Async (unless specific latency requirements)
-- Standard library over dependencies (unless >50 lines equivalent)
-- In-process over Networked (no Redis/Celery for V1)
-
-**Complexity Justification Rule:**
-For every non-standard technology choice, include a "Complexity Tradeoff" section:
-- Simple alternative considered
-- Why simple alternative fails (cite specific PRD requirement)
-- Added maintenance burden
-- Removal plan if requirements change
-
-Be opinionated. Make SIMPLE decisions.
-```
-
-#### Context Refresh Prompt
-
-```
-Let's verify alignment before continuing.
-
-Please summarize:
-1. **Decisions made this session** (bullet points, be specific)
-2. **Still open/unresolved** (what haven't we decided yet?)
-3. **Immediate next action** (what are we about to do?)
-
-I'll verify this matches my understanding.
+[What must be resolved]
 ```
 
 ---
 
-## Complexity Constraints Reference
+## Phase 4: Post-Ship
 
-### YAGNI (You Aren't Gonna Need It)
-- No generic interfaces until 3+ implementations exist
-- No config options for single values
-- No plugin systems unless PRD explicitly requires it
-- If you write "this will allow us to easily..." — STOP and delete it
+### Step 4.1: Reality Sync (Optional — can defer to next session start)
+- [ ] Complete
+- [ ] Deferred to next session
 
-### Boring Tech Defaults
-| Complex Option | Simple Default | Use Complex When |
-|----------------|----------------|------------------|
-| PostgreSQL | SQLite | >1M rows, concurrent writes |
-| Microservices | Monolith | Independent scaling required |
-| Async | Sync | Specific latency requirements |
-| External deps | Stdlib | >50 lines equivalent |
-| Redis/Celery | In-process | Multi-machine deployment |
-
-### The Deletion Test
-For every component: "What breaks if I delete this?"
-- If nothing breaks → Don't build it
-- If only future features break → Don't build it
-- If only "cleanliness" breaks → Don't build it
-
-### ComplexityFlag Triggers
-Developer should refuse to implement:
-- Plugin system with no concrete plugins
-- Interface with only one implementation
-- Config system for hardcoded values
-- Generic solution for one specific case
+**Note:** Reality Sync can be done at the START of your next session instead of end of this one. The prompt will ask the model to update the plan before discussing new work.
 
 ---
 
-## Anti-Sycophancy Patterns
+## Session Log
 
-### Key Phrases That Force Divergence
-| Pattern | Why It Works |
-|---------|--------------|
-| "What would you have done differently?" | Must propose alternatives |
-| "Keep your integrity" | Permission to disagree |
-| "ultrathink" | Triggers extended reasoning |
-| "Find three things wrong with this" | Forces critical analysis |
-
-### Detecting Sycophantic Responses
-**Red Flags:**
-- Starts with "That's a great approach" or "You're absolutely right"
-- Review shorter than artifact being reviewed
-- No specific suggestions for changes
-- Says "I agree" without explaining WHY
-- Approves both options when asked to choose one
-
-### Anti-Sycophancy Phrase Upgrades
-| Weak | Strong |
-|------|--------|
-| "Review this code" | "Find three things wrong. If you can't, explain why each concern doesn't apply." |
-| "Is this approach good?" | "Argue against this, then for it, then tell me which argument is stronger." |
-| "Any feedback?" | "What would you change if starting fresh? What would you keep exactly as-is?" |
+| Timestamp | Action | Notes |
+|-----------|--------|-------|
+| | Session started | |
+| | Requirements drafted | |
+| | Architect spec complete | |
+| | Critics fanned out | |
+| | Feedback consolidated | |
+| | Architect revision complete | |
+| | **GATE: Proceed to Dev** | Decision: |
+| | Developer complete | PR: |
+| | Reviewers fanned out | |
+| | Reviews consolidated | |
+| | **GATE: Merge** | Decision: |
+| | Merged | |
 
 ---
 
-## Artifact Templates
+## Quick Reference
 
-### VERSION_SPEC.md Structure
-```markdown
-# Implementation Spec: {{VERSION}}
+### Models Recommended by Role
+| Role | Recommended | Reasoning |
+|------|-------------|-----------|
+| Architect | Claude | Best at structured reasoning, constraints |
+| Critic (Standard) | Claude | Thorough analysis |
+| Critic (Technical) | Gemini | Technical depth |
+| Critic (Adversarial) | GPT-4 | Good at adversarial framing |
+| Developer | Codex / Claude Code / Cursor | Agentic coding |
+| Standard Reviewer | Gemini | Different from Developer |
+| Adversarial Reviewer | GPT-4 | Different from Developer AND Standard |
 
-## Assumptions
-[Required table of assumptions with impact if wrong]
-
-## Product Scope
-- Problem Statement
-- Scope Boundaries
-- Cut List
-
-## File Structure
-[Exact files to create/modify]
-
-## Implementation Details
-[API contracts, data models]
-
-## Test Strategy
-[Unit, integration, acceptance tests]
-
-## Developer Instructions
-[Step-by-step for coding agent]
-```
-
-### MASTER_PLAN.md Structure
-```markdown
-# Master Implementation Plan
-
-## Architecture Overview
-[System diagram, major components]
-
-## Tech Stack
-[Technologies with Complexity Tradeoffs for non-boring choices]
-
-## Version Roadmap
-### v1.0 — [Name]
-- Status: [Planned/In Progress/Complete]
-- Features: [list]
-- Acceptance gate: [criteria]
-```
-
----
-
-*For the stateful session workflow, use [session-template.md](session-template.md). For human reference on emergencies and escalation, see [orchestrator-handbook.md](orchestrator-handbook.md).*
+### Key Rules
+- **Parallel fan-out:** Send to multiple models simultaneously, don't wait
+- **One revision cap:** If major issues after revision, scope is wrong — split or clarify requirements
+- **Side with pessimist:** If Adversarial blocks, default is BLOCK
+- **ComplexityFlags are valid:** Developer can refuse over-engineered specs

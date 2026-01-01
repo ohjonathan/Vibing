@@ -4,75 +4,86 @@ A lightweight system for solo developers to build software with LLM agents.
 
 ## What This Is
 
-Three files that help you orchestrate multiple LLMs to write specs, code, and review each other's work:
+Four files that help you orchestrate multiple LLMs:
 
 | File | Audience | Purpose |
 |------|----------|---------|
-| `llm-development-playbook.md` | LLMs | Roles, workflows, prompts |
-| `orchestrator-handbook.md` | You | Emergencies, escalation, monitoring |
-| `session-variables.md` | Both | Your current session values |
+| `session-template.md` | Both | Copy per feature — tracks progress, provides prompts |
+| `llm-development-playbook.md` | LLMs | Role definitions, prompt reference |
+| `orchestrator-handbook.md` | You | Decisions, emergencies, escalation |
+| `session-variables.md` | Both | Variable reference |
 
 ## How It Works
 
-You are the orchestrator. LLMs are your team. You trigger each handoff manually.
+You are the orchestrator. LLMs are your team. You make two decisions per feature.
 
 ```
-You write strategy
+You write requirements
     ↓
-LLM architects write specs (review each other until converged)
+Architect writes spec
     ↓
-LLM developer writes code
+Critics review IN PARALLEL (Claude + Gemini + GPT)
     ↓
-LLM reviewers review (including adversarial reviewer who hunts bugs AND complexity)
+Consolidate → Architect revises ONCE
     ↓
-LLM synthesizers compress reviews for your decision
+★ YOU DECIDE: Proceed to Development?
     ↓
-You approve or request changes
+Developer writes code
     ↓
-Merge
+Reviewers review IN PARALLEL (Standard + Adversarial)
+    ↓
+Consolidate feedback
+    ↓
+★ YOU DECIDE: Merge?
+    ↓
+Done
 ```
 
-## Philosophy: Simplicity Over Cleverness
+**Handoffs:** 6-8 per feature (down from 12-16 in v1.1)
+**Your decisions:** 2 clear gates
 
-This workflow enforces **engineering constraints** at every stage to combat "sycophancy of complexity" — the tendency of LLMs to over-engineer solutions to demonstrate competence.
+## Philosophy: Parallel Over Sequential
 
-**Built-in constraints:**
-- **YAGNI**: No generic interfaces until 3+ implementations exist
-- **Boring Tech**: SQLite over Postgres, monolith over microservices, in-process over networked
-- **Cut List**: Product Architect must explicitly defer non-essential features
-- **ComplexityFlag**: Developer can REFUSE to implement over-engineered specs
-- **Complexity Audit**: Adversarial Reviewer hunts unnecessary abstraction with the same rigor as bugs
-
-Complexity is treated as a liability, not an asset.
+v1.2 replaces sequential convergence loops with parallel fan-out:
+- Same number of perspectives
+- ~50% fewer handoffs
+- Model diversity preserved (different models review in parallel)
 
 ## Quick Start
 
-1. Fill in `session-variables.md` with your project details
-2. Open a new LLM chat
-3. Attach `llm-development-playbook.md` + `session-variables.md`
-4. Paste the Generator Prompt from `orchestrator-handbook.md`
-5. Get all your prompts generated with your variables substituted
+1. Copy `session-template.md` to `sessions/[version].md`
+2. Fill in variables at top
+3. Follow the template step by step — it provides ready-to-copy prompts
+4. Make decisions at the two gates
 
 ## Key Concepts
 
-- **Spec Convergence**: Multiple architect LLMs review specs until they agree — with Gate Checks that reject speculative design upfront
-- **Adversarial Review**: One reviewer is prompted to reject by default — hunting both bugs AND architectural bloat
-- **Model Diversity**: Use different models for developer vs. reviewers to avoid shared blind spots
-- **Anti-Sycophancy**: Prompts force LLMs to take positions, not just validate
-- **Side with the Pessimist**: When reviewers disagree on complexity, default is BLOCK
+- **Parallel Fan-Out**: Critics and reviewers work simultaneously, not sequentially
+- **One Revision Cap**: If major issues persist after one revision, scope is wrong
+- **Model Diversity**: Different models for Architect, Critics, Developer, Reviewers
+- **Side with Pessimist**: Adversarial concerns win by default
+- **ComplexityFlag**: Developer can refuse over-engineered specs
 
-## Dependencies
+## Complexity Constraints (Enforced Throughout)
 
-Works with [Project Ontos](https://github.com/ohjona/Project-Ontos) for context persistence between agents. Not required, but recommended.
+- **YAGNI**: No generic interfaces until 3+ implementations
+- **Boring Tech**: SQLite > Postgres, monolith > microservices, in-process > networked
+- **Cut List**: Every spec must defer non-essential features
+- **Deletion Test**: If nothing breaks when removed, don't build it
 
 ## Files
 
 ```
-├── llm-development-playbook.md   # Give to LLMs
-├── orchestrator-handbook.md      # Keep open for yourself
-├── session-variables.md          # Edit per session
+├── session-template.md           # Copy per feature (the main workflow doc)
+├── llm-development-playbook.md   # Reference for LLMs
+├── orchestrator-handbook.md      # Reference for you
+├── session-variables.md          # Variable definitions
 └── README.md                     # You are here
 ```
+
+## Dependencies
+
+Works with [Project Ontos](https://github.com/ohjona/Project-Ontos) for context persistence between agents. Not required, but recommended.
 
 ---
 
