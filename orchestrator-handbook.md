@@ -4,14 +4,41 @@
 
 ---
 
+## Initiation Prompt
+
+Copy this to your agentic CLI (Claude Code, Cursor, etc.) to start a session:
+
+```
+Read llm-development-playbook.md. You are now operating under this playbook.
+
+Project: [PROJECT NAME]
+Version: [VERSION]
+Branch: [BRANCH NAME]
+
+Requirements for this version:
+[PASTE YOUR REQUIREMENTS]
+
+Start as Architect. Generate the implementation spec following the Architect Prompt constraints. When complete, I'll fan out to critics.
+```
+
+After the Architect produces a spec, you manually:
+1. Send to 3 critics in parallel (Claude, Gemini, GPT)
+2. Consolidate feedback
+3. Send back to Architect for one revision
+4. Gate 1: Proceed?
+5. Hand spec to Developer
+6. Send PR to reviewers in parallel
+7. Gate 2: Merge?
+
+---
+
 ## Quick-Start
 
-1. Write your requirements
-2. Copy prompts from [llm-development-playbook.md](llm-development-playbook.md) as needed
-3. Run critics in parallel, consolidate, revise once
-4. **Gate 1:** Proceed to development?
-5. Developer implements, reviewers review in parallel
-6. **Gate 2:** Merge?
+1. Use the Initiation Prompt above
+2. Run critics in parallel, consolidate, revise once
+3. **Gate 1:** Proceed to development?
+4. Developer implements, reviewers review in parallel
+5. **Gate 2:** Merge?
 
 That's it.
 

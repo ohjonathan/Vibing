@@ -41,12 +41,12 @@ Done
 
 ## Quick Start
 
-1. Write your requirements
-2. Copy the Architect prompt from the playbook, fill in your details
+1. Copy the **Initiation Prompt** from [orchestrator-handbook.md](orchestrator-handbook.md) to your agentic CLI
+2. Architect produces spec
 3. Send to critics in parallel, consolidate, revise once
-4. Gate 1: Proceed to development?
+4. **Gate 1:** Proceed to development?
 5. Developer implements, reviewers review in parallel
-6. Gate 2: Merge?
+6. **Gate 2:** Merge?
 
 ## Key Concepts
 
