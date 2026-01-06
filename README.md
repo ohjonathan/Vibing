@@ -2,66 +2,47 @@
 
 A lightweight system for solo developers to build software with LLM agents.
 
-## What This Is
+## Files
 
-| File | Audience | Purpose |
-|------|----------|---------|
-| `llm-development-playbook.md` | LLMs | Prompts, roles, constraints |
-| `orchestrator-handbook.md` | You | Workflow, emergencies, escalation |
-| `README.md` | Both | You are here |
+| File | Purpose |
+|------|---------|
+| `session-variables.md` | Fill in your values once per session |
+| `llm-development-playbook.md` | All prompts (source of truth) |
+| `orchestrator-handbook.md` | Generator Prompt + emergencies |
 
 ## How It Works
 
-You are the orchestrator. LLMs are your team. You make two decisions per feature.
+1. Fill in `session-variables.md`
+2. Copy the **Generator Prompt** from `orchestrator-handbook.md` to your agentic CLI
+3. LLM reads the playbook and outputs all prompts with your variables filled in
+4. Copy each prompt to the appropriate model as needed
+5. Make decisions at two gates: **Proceed to Development?** and **Merge?**
+
+## Workflow
 
 ```
-You write requirements
+Generator Prompt → LLM outputs all prompts
     ↓
-Architect writes spec
+Architect → Spec
     ↓
-Critics review IN PARALLEL (Claude + Gemini + GPT)
+3 Critics IN PARALLEL → Consolidate → Architect revises ONCE
     ↓
-Consolidate → Architect revises ONCE
+★ GATE 1: Proceed?
     ↓
-★ YOU DECIDE: Proceed to Development?
+Developer → PR
     ↓
-Developer writes code
+2 Reviewers IN PARALLEL → Consolidate
     ↓
-Reviewers review IN PARALLEL (Standard + Adversarial)
-    ↓
-Consolidate feedback
-    ↓
-★ YOU DECIDE: Merge?
-    ↓
-Done
+★ GATE 2: Merge?
 ```
-
-**Handoffs:** 6-8 per feature
-**Your decisions:** 2 gates
-
-## Quick Start
-
-1. Copy the **Initiation Prompt** from [orchestrator-handbook.md](orchestrator-handbook.md) to your agentic CLI
-2. Architect produces spec
-3. Send to critics in parallel, consolidate, revise once
-4. **Gate 1:** Proceed to development?
-5. Developer implements, reviewers review in parallel
-6. **Gate 2:** Merge?
 
 ## Key Concepts
 
-- **Parallel Fan-Out**: Critics and reviewers work simultaneously, not sequentially
-- **One Revision Cap**: If major issues persist after one revision, scope is wrong
-- **Model Diversity**: Different models for Architect, Critics, Developer, Reviewers
+- **Parallel Fan-Out**: Critics and reviewers work simultaneously
+- **One Revision Cap**: If issues persist, scope is wrong
+- **Verbatim Prompts**: LLM outputs prompts exactly as written, no improvisation
 - **Side with Pessimist**: Adversarial concerns win by default
 - **ComplexityFlag**: Developer can refuse over-engineered specs
-
-## Complexity Constraints
-
-- **YAGNI**: No generic interfaces until 3+ implementations
-- **Boring Tech**: SQLite > Postgres, monolith > microservices
-- **Cut List**: Every spec must defer non-essential features
-- **Deletion Test**: If nothing breaks when removed, don't build it
 
 ---
 

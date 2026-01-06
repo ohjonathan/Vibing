@@ -1,68 +1,100 @@
 # Orchestrator Handbook v1.2
 
-> Your reference for emergencies, escalation, and the two decision gates
+> Generator Prompt + Workflow + Emergencies
 
 ---
 
-## Initiation Prompt
+## Generator Prompt
 
-Copy this to your agentic CLI (Claude Code, Cursor, etc.) to start a session:
+Copy this to your agentic CLI at the start of each session:
 
 ```
-Read llm-development-playbook.md. You are now operating under this playbook.
+Read llm-development-playbook.md and session-variables.md.
 
-Project: [PROJECT NAME]
-Version: [VERSION]
-Branch: [BRANCH NAME]
+Generate ready-to-paste prompts using the EXACT templates from the playbook. Do NOT modify, expand, or "improve" the prompts — use them VERBATIM. Fill in {{VARIABLES}} with values from session-variables.md.
 
-Requirements for this version:
-[PASTE YOUR REQUIREMENTS]
+Generate these prompts:
+1. Architect
+2. Critic — Standard (Claude)
+3. Critic — Technical (Gemini)  
+4. Critic — Adversarial (GPT)
+5. Spec Consolidator
+6. Architect Revision
+7. Developer
+8. Standard Reviewer
+9. Adversarial Reviewer
+10. Review Consolidator
+11. Reality Sync (if version just shipped)
 
-Start as Architect. Generate the implementation spec following the Architect Prompt constraints. When complete, I'll fan out to critics.
+Output each prompt in a code block I can copy.
 ```
 
-After the Architect produces a spec, you manually:
-1. Send to 3 critics in parallel (Claude, Gemini, GPT)
-2. Consolidate feedback
-3. Send back to Architect for one revision
-4. Gate 1: Proceed?
-5. Hand spec to Developer
-6. Send PR to reviewers in parallel
-7. Gate 2: Merge?
+**What this does:** You input variables once → LLM outputs all prompts with your values filled in → you copy each to the appropriate model as needed.
+
+**Why verbatim matters:** The prompts are carefully designed (adversarial framing, output formats, 300-word minimums, complexity audit FIRST). If the LLM "improves" them, constraints get softened.
 
 ---
 
-## Quick-Start
+## Workflow
 
-1. Use the Initiation Prompt above
-2. Run critics in parallel, consolidate, revise once
-3. **Gate 1:** Proceed to development?
-4. Developer implements, reviewers review in parallel
-5. **Gate 2:** Merge?
+```
+You fill session-variables.md
+    ↓
+Generator Prompt → LLM outputs all prompts
+    ↓
+Copy Architect prompt → Get spec
+    ↓
+Copy 3 Critic prompts → Send IN PARALLEL (Claude, Gemini, GPT)
+    ↓
+Copy Consolidator prompt → Synthesize feedback
+    ↓
+Copy Architect Revision prompt → One revision
+    ↓
+★ GATE 1: Proceed to Development?
+    ↓
+Copy Developer prompt → Get PR
+    ↓
+Copy 2 Reviewer prompts → Send IN PARALLEL (Standard, Adversarial)
+    ↓
+Copy Review Consolidator prompt → Synthesize
+    ↓
+★ GATE 2: Merge?
+    ↓
+Copy Reality Sync prompt → Update Master Plan
+```
 
-That's it.
+**Handoffs:** 6-8 per feature
+**Your decisions:** 2 gates
+**Parallel steps:** Critics (3 models), Reviewers (2 models)
 
 ---
 
 ## The Two Gates
 
-Your only mandatory decision points:
-
 ```
 ┌──────────────────────────────────────────┐
-│  1. PROCEED TO DEVELOPMENT?              │
-│     After Architect revision             │
-│     You've seen all critic feedback      │
-│     You decide: build or clarify scope   │
+│  GATE 1: PROCEED TO DEVELOPMENT?         │
+│  After Architect revision                │
+│  You've seen all critic feedback         │
+│  You decide: build or clarify scope      │
 ├──────────────────────────────────────────┤
-│  2. MERGE?                               │
-│     After code review consolidation      │
-│     You've seen complexity concerns      │
-│     You decide: ship or address issues   │
+│  GATE 2: MERGE?                          │
+│  After review consolidation              │
+│  You've seen complexity concerns         │
+│  You decide: ship or address issues      │
 └──────────────────────────────────────────┘
 ```
 
-Everything else is execution.
+---
+
+## One Revision Cap
+
+If major issues persist after one revision:
+- **Requirements unclear** → Fix requirements, don't iterate
+- **Scope too large** → Split the feature
+- **Fundamental disagreement** → You decide
+
+More rounds don't fix these. They defer the problem.
 
 ---
 
@@ -96,17 +128,6 @@ Everything else is execution.
 
 ---
 
-## One Revision Cap
-
-If major issues persist after one revision:
-- **Requirements unclear** → Fix requirements, don't iterate
-- **Scope too large** → Split the feature
-- **Fundamental disagreement** → You decide
-
-More rounds don't fix these. They defer the problem.
-
----
-
 ## Emergency Procedures
 
 ### E1: Developer Stuck in Loop
@@ -132,7 +153,7 @@ More rounds don't fix these. They defer the problem.
 
 ### E5: Context Collapse
 1. Do NOT continue
-2. Use Context Refresh prompt
+2. Use Context Refresh prompt from playbook
 3. Correct or start fresh
 
 ### E6: Reviewers Approve Too Easily
@@ -177,7 +198,7 @@ More rounds don't fix these. They defer the problem.
 ## Quick Reference
 
 ### Key Rules
-- **Parallel fan-out:** Don't wait for responses sequentially
+- **Parallel fan-out:** Send critics/reviewers simultaneously, don't wait
 - **One revision cap:** If issues persist, scope is wrong
 - **Side with pessimist:** Adversarial wins ties
 - **ComplexityFlags are valid:** Developer can refuse
@@ -186,7 +207,3 @@ More rounds don't fix these. They defer the problem.
 - "What breaks if we delete this?"
 - "Show me 3 concrete uses for this abstraction"
 - "What PRD requirement necessitates this?"
-
----
-
-*For prompts and constraints, see [llm-development-playbook.md](llm-development-playbook.md).*
