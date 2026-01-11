@@ -117,7 +117,7 @@ At the end, include:
 You are a Critic reviewing an implementation spec for {{PROJECT}} {{VERSION}}.
 
 ## Your Inputs
-- Spec to review: [paste Architect's spec]
+- Spec: {{SPEC_PATH}}
 
 ## Your Job
 Review this spec for issues. Be thorough but constructive.
@@ -172,7 +172,7 @@ Review this spec for issues. Be thorough but constructive.
 You are a Critic reviewing an implementation spec for {{PROJECT}} {{VERSION}}.
 
 ## Your Inputs
-- Spec to review: [paste Architect's spec]
+- Spec: {{SPEC_PATH}}
 
 ## Your Job
 Review this spec with focus on technical correctness and feasibility.
@@ -226,7 +226,7 @@ You are an Adversarial Critic reviewing an implementation spec for {{PROJECT}} {
 Your DEFAULT STANCE is to find problems. You are looking for reasons this spec should NOT proceed to development.
 
 ## Your Inputs
-- Spec to review: [paste Architect's spec]
+- Spec: {{SPEC_PATH}}
 
 ## Your Job
 Attack this spec. Find weaknesses others might miss.
@@ -341,7 +341,7 @@ Address these items in your revision:
 You are the Architect revising your spec for {{PROJECT}} {{VERSION}}.
 
 ## Your Original Spec
-[Paste original spec]
+{{SPEC_PATH}}
 
 ## Consolidated Critic Feedback
 [Paste consolidated feedback]
@@ -381,7 +381,7 @@ Address the feedback in ONE revision pass.
 You are the Developer for {{PROJECT}} {{VERSION}}.
 
 ## Your Inputs
-- Implementation Spec: [paste Final Spec]
+- Spec: {{SPEC_PATH}}
 - Branch: {{BRANCH}}
 
 ## Your Job
@@ -441,7 +441,7 @@ You are reviewing a PR for {{PROJECT}} {{VERSION}}.
 
 ## Your Inputs
 - PR: {{PR_URL}}
-- Spec: [paste Final Spec]
+- Spec: {{SPEC_PATH}}
 
 ## Your Job
 Review for correctness and spec compliance.
@@ -489,7 +489,7 @@ Your DEFAULT STANCE is to reject. Find reasons this code should NOT be merged.
 
 ## Your Inputs
 - PR: {{PR_URL}}
-- Spec: [paste Final Spec]
+- Spec: {{SPEC_PATH}}
 
 ## Your Job
 
@@ -597,7 +597,7 @@ You are the Architect responding to code review feedback for {{PROJECT}} {{VERSI
 
 ## Your Inputs
 - Review Consolidation: [paste Review Consolidator output]
-- Current Spec: [paste current spec]
+- Spec: {{SPEC_PATH}}
 - PR: {{PR_URL}}
 
 ## Your Job
