@@ -1,51 +1,49 @@
 # LLM Development Playbook
 
-A lightweight system for solo developers to build software with LLM agents.
+A multi-agent review workflow for LLM-augmented software development. Uses intentional model diversity and role differentiation to catch issues that single-model workflows miss.
 
 ## Files
 
 | File | Purpose |
 |------|---------|
-| `session-variables.md` | Fill in your values once per session |
-| `llm-development-playbook.md` | All prompts (source of truth) |
-| `orchestrator-handbook.md` | Generator Prompt + emergencies |
+| `llm-development-playbook.md` | Source of truth — all principles, phases, roles, and protocols |
+| `session-variables.md` | Project and release variables template (fill in before starting) |
 
 ## How It Works
 
-1. Fill in `session-variables.md`
-2. Copy the **Generator Prompt** from `orchestrator-handbook.md` to your agentic CLI
-3. LLM reads the playbook and outputs all prompts with your variables filled in
-4. Copy each prompt to the appropriate model as needed
-5. Make decisions at two gates: **Proceed to Development?** and **Merge?**
+1. **Fill in** `session-variables.md` with your project and release details.
+2. The playbook defines a **four-phase workflow**: Spec Development (A) → Spec Review (B) → Implementation (C) → Code Review (D).
+3. Each review phase uses **three specialized reviewers** (Peer, Alignment, Adversarial) running in parallel across different model families.
+4. The **Chief Architect** (human-directed) makes decisions at phase gates.
+5. **Prompts are generated fresh** per phase transition — self-contained, not reused from templates.
 
-## Workflow
+### Workflow
 
 ```
-Generator Prompt → LLM outputs all prompts
-    ↓
-Architect → Spec
-    ↓
-3 Critics IN PARALLEL → Consolidate → Architect revises ONCE
-    ↓
-★ GATE 1: Proceed?
-    ↓
-Developer → PR
-    ↓
-2 Reviewers IN PARALLEL → Consolidate
-    ↓
-Architect Review Response → Developer Amendment → Final Review
-    ↓
-★ GATE 2: Merge?
+PHASE A: Spec Development          PHASE B: Spec Review
+  CA writes spec v1.0                B.1: Review Board (3 models, parallel)
+         │                           B.2: Consolidation
+         ▼                           B.3: CA Response → Spec v1.1
+  Submit for review ──────────▶      B.4: Verification (if needed)
+                                            │
+                    ┌───────────────────────┘
+                    ▼
+PHASE C: Implementation             PHASE D: Code Review
+  C.1: CA writes impl prompt         D.1: CA PR Review
+  C.2: Developer implements          D.2: Review Board (3 models, parallel)
+  C.3: PR created ──────────────▶    D.3: Consolidation
+                                     D.4: Developer fixes (if needed)
+                                     D.5: Adversarial verification
+                                     D.6: CA approval → MERGE
 ```
 
 ## Key Concepts
 
-- **Parallel Fan-Out**: Critics and reviewers work simultaneously
-- **One Revision Cap**: If issues persist, scope is wrong
-- **Verbatim Prompts**: LLM outputs prompts exactly as written, no improvisation
-- **Side with Pessimist**: Adversarial concerns win by default
-- **ComplexityFlag**: Developer can refuse over-engineered specs
-
----
-
-*Built for solo developers who want to ship, not babysit.*
+| Concept | Summary | Reference |
+|---------|---------|-----------|
+| **Model Diversity** | Different AI models for different roles — prevents shared blind spots | §2.1 |
+| **One-Revision Cap** | Two rounds max per review cycle. If it doesn't converge, re-scope. | §2.2 |
+| **Role Differentiation** | Peer (quality), Alignment (compliance), Adversarial (breaking) — three distinct lenses | §2.3 |
+| **Document-Driven Review** | Reviews anchored to approved docs, not author framing | §2.4 |
+| **Fresh Prompt Generation** | Every prompt is self-contained and generated for the current step | §2.7 |
+| **Context Window Management** | Deliberate budgeting of context to keep models in the attention sweet spot | §7.8 |
